@@ -1,7 +1,7 @@
 package ee.taltech.inbankbackend.exceptions;
 
 /**
- * Thrown when requested loan amount is invalid.
+ * Thrown when age is not in the approved age range.
  */
 public class NotInTheApprovedAgeRangeException extends Throwable {
     private final String message;

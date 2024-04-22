@@ -6,7 +6,6 @@ import ee.taltech.inbankbackend.exceptions.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Period;
 
 /**
@@ -70,6 +69,15 @@ public class DecisionEngine {
         return new Decision(outputLoanAmount, loanPeriod, null);
     }
 
+    /**
+     * Check if the age of the customer is in the appropriate age range.
+     * The age needs to be more than the legal age of majority and less than the current life expectancy according to
+     * gender.
+     * As  mentioned in the assignment, for simplicity’s sake the personalCode is same for all the countries based on
+     * Estonia's personal code.
+     * @param personalCode ID code of the customer that made the request.
+     * @return true if age is within the appropriate range, otherwise false.
+     */
     private Boolean isWithinAppropriateAge(String personalCode) {
         int birthYear = Integer.parseInt(calculateTheBirthYear(personalCode));
         int birthMonth = Integer.parseInt(personalCode.substring(3, 5));
@@ -80,8 +88,8 @@ public class DecisionEngine {
 
         Integer currentAge = Period.between(birthDate, currentDate).getYears();
 
-        if (currentAge < DecisionEngineConstants.AGE_OF_MAJORITY) {
-            return Boolean.FALSE;
+        if (currentAge <= DecisionEngineConstants.AGE_OF_MAJORITY) {
+            return false;
         }
         if (birthYear == 1 || birthYear == 3 || birthYear == 5) {
             return currentAge - DecisionEngineConstants.MAXIMUM_LOAN_PERIOD <
@@ -92,6 +100,11 @@ public class DecisionEngine {
         }
     }
 
+    /**
+     * Calculate the birthYear using the personalCode.
+     * @param personalCode ID code of the customer that made the request.
+     * @return birthYear as string
+     */
     private String calculateTheBirthYear(String personalCode) {
         char firstHalf = personalCode.charAt(0);
         String secondHalf = personalCode.substring(1, 3);
