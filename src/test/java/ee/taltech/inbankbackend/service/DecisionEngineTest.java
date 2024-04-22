@@ -21,13 +21,18 @@ class DecisionEngineTest {
     private String segment1PersonalCode;
     private String segment2PersonalCode;
     private String segment3PersonalCode;
+    private String tooOldPersonalCode;
+    private String tooYoungPersonalCode;
+
 
     @BeforeEach
     void setUp() {
         debtorPersonalCode = "37605030299";
         segment1PersonalCode = "50307172740";
         segment2PersonalCode = "38411266610";
-        segment3PersonalCode = "35006069515";
+        segment3PersonalCode = "48006069511";
+        tooOldPersonalCode = "35006069515";
+        tooYoungPersonalCode = "52101151197";
     }
 
     @Test
@@ -103,6 +108,24 @@ class DecisionEngineTest {
     void testNoValidLoanFound() {
         assertThrows(NoValidLoanException.class,
                 () -> decisionEngine.calculateApprovedLoan(debtorPersonalCode, 10000L, 60));
+    }
+    @Test
+    void testAgeIsWithinRange() throws InvalidLoanPeriodException, NoValidLoanException,
+            InvalidPersonalCodeException, InvalidLoanAmountException, NotInTheApprovedAgeRangeException {
+        Decision decision = decisionEngine.calculateApprovedLoan(segment2PersonalCode, 2000L, 12);
+        assertEquals(3600, decision.getLoanAmount());
+        assertEquals(12, decision.getLoanPeriod());
+    }
+    @Test
+    void testCustomerIsTooOld() {
+        System.out.println("a");
+        assertThrows(NotInTheApprovedAgeRangeException.class,
+                () -> decisionEngine.calculateApprovedLoan(tooOldPersonalCode, 2000L, 12));
+    }
+    @Test
+    void testCustomerIsUnderage() {
+        assertThrows(NotInTheApprovedAgeRangeException.class,
+                () -> decisionEngine.calculateApprovedLoan(tooYoungPersonalCode, 2000L, 12));
     }
 
 }
