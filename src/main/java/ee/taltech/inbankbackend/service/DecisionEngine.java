@@ -80,30 +80,28 @@ public class DecisionEngine {
      */
     private Boolean isWithinAppropriateAge(String personalCode) {
         int birthYear = Integer.parseInt(calculateTheBirthYear(personalCode));
+        int birthYearCode = Integer.parseInt(String.valueOf(personalCode.charAt(0)));
         int birthMonth = Integer.parseInt(personalCode.substring(3, 5));
         int birthDay = Integer.parseInt(personalCode.substring(5, 7));
 
         LocalDate birthDate = LocalDate.of(birthYear, birthMonth, birthDay);
         LocalDate currentDate = LocalDate.now();
-        Period maximumLoanPeriod = Period.ofYears(DecisionEngineConstants.MAXIMUM_LOAN_PERIOD / 12)
-                .plusMonths(DecisionEngineConstants.MAXIMUM_LOAN_PERIOD % 12);
 
-        Period currentAge = Period.between(birthDate, currentDate);
-
-        Period adjustedAge = currentAge.minus(maximumLoanPeriod);
-        int adjustedYear = adjustedAge.getYears();
-        if (adjustedAge.getMonths() < 1) {
-            adjustedYear--;
+        int maximumLoanPeriodInYears = DecisionEngineConstants.MAXIMUM_LOAN_PERIOD / 12;
+        if (maximumLoanPeriodInYears % 12 != 0) {
+            maximumLoanPeriodInYears++;
         }
 
-        if (adjustedYear <= DecisionEngineConstants.AGE_OF_MAJORITY) {
+        int currentAge = Period.between(birthDate, currentDate).getYears();
+
+        if (currentAge <= DecisionEngineConstants.AGE_OF_MAJORITY) {
             return false;
         }
-        if (birthYear == 1 || birthYear == 3 || birthYear == 5) {
-            return adjustedYear <
-                    DecisionEngineConstants.CURRENT_LIFE_EXPECTANCY_MALE;
+        if (birthYearCode == 1 || birthYearCode == 3 || birthYearCode == 5) {
+            return currentAge <
+                    (DecisionEngineConstants.CURRENT_LIFE_EXPECTANCY_MALE - maximumLoanPeriodInYears);
         } else {
-            return adjustedYear < DecisionEngineConstants.CURRENT_LIFE_EXPECTANCY_FEMALE;
+            return currentAge < (DecisionEngineConstants.CURRENT_LIFE_EXPECTANCY_FEMALE - maximumLoanPeriodInYears);
         }
     }
 
