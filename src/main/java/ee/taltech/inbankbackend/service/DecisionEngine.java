@@ -85,18 +85,25 @@ public class DecisionEngine {
 
         LocalDate birthDate = LocalDate.of(birthYear, birthMonth, birthDay);
         LocalDate currentDate = LocalDate.now();
+        Period maximumLoanPeriod = Period.ofYears(DecisionEngineConstants.MAXIMUM_LOAN_PERIOD / 12)
+                .plusMonths(DecisionEngineConstants.MAXIMUM_LOAN_PERIOD % 12);
 
-        Integer currentAge = Period.between(birthDate, currentDate).getYears();
+        Period currentAge = Period.between(birthDate, currentDate);
 
-        if (currentAge <= DecisionEngineConstants.AGE_OF_MAJORITY) {
+        Period adjustedAge = currentAge.minus(maximumLoanPeriod);
+        int adjustedYear = adjustedAge.getYears();
+        if (adjustedAge.getMonths() < 1) {
+            adjustedYear--;
+        }
+
+        if (adjustedYear <= DecisionEngineConstants.AGE_OF_MAJORITY) {
             return false;
         }
         if (birthYear == 1 || birthYear == 3 || birthYear == 5) {
-            return currentAge - DecisionEngineConstants.MAXIMUM_LOAN_PERIOD <
+            return adjustedYear <
                     DecisionEngineConstants.CURRENT_LIFE_EXPECTANCY_MALE;
         } else {
-            return currentAge - DecisionEngineConstants.MAXIMUM_LOAN_PERIOD <
-                    DecisionEngineConstants.CURRENT_LIFE_EXPECTANCY_FEMALE;
+            return adjustedYear < DecisionEngineConstants.CURRENT_LIFE_EXPECTANCY_FEMALE;
         }
     }
 
@@ -106,7 +113,7 @@ public class DecisionEngine {
      * @return birthYear as string
      */
     private String calculateTheBirthYear(String personalCode) {
-        char firstHalf = personalCode.charAt(0);
+        int firstHalf = Integer.parseInt(String.valueOf(personalCode.charAt(0)));
         String secondHalf = personalCode.substring(1, 3);
         if (firstHalf == 1 || firstHalf == 2) {
             return "18" + secondHalf;
