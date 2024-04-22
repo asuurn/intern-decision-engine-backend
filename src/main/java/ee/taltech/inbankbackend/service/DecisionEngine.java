@@ -2,11 +2,12 @@ package ee.taltech.inbankbackend.service;
 
 import com.github.vladislavgoltjajev.personalcode.locale.estonia.EstonianPersonalCodeValidator;
 import ee.taltech.inbankbackend.config.DecisionEngineConstants;
-import ee.taltech.inbankbackend.exceptions.InvalidLoanAmountException;
-import ee.taltech.inbankbackend.exceptions.InvalidLoanPeriodException;
-import ee.taltech.inbankbackend.exceptions.InvalidPersonalCodeException;
-import ee.taltech.inbankbackend.exceptions.NoValidLoanException;
+import ee.taltech.inbankbackend.exceptions.*;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Period;
 
 /**
  * A service class that provides a method for calculating an approved loan amount and period for a customer.
@@ -37,11 +38,15 @@ public class DecisionEngine {
      */
     public Decision calculateApprovedLoan(String personalCode, Long loanAmount, int loanPeriod)
             throws InvalidPersonalCodeException, InvalidLoanAmountException, InvalidLoanPeriodException,
-            NoValidLoanException {
+            NoValidLoanException, NotInTheApprovedAgeRangeException {
         try {
             verifyInputs(personalCode, loanAmount, loanPeriod);
         } catch (Exception e) {
             return new Decision(null, null, e.getMessage());
+        }
+
+        if (!isWithinAppropriateAge(personalCode)) {
+            throw new NotInTheApprovedAgeRangeException("Age not in appropriate age range!");
         }
 
         int outputLoanAmount;
@@ -60,10 +65,44 @@ public class DecisionEngine {
         } else {
             throw new NoValidLoanException("No valid loan found!");
         }
+        System.out.println(outputLoanAmount);
 
         return new Decision(outputLoanAmount, loanPeriod, null);
     }
 
+    private Boolean isWithinAppropriateAge(String personalCode) {
+        int birthYear = Integer.parseInt(calculateTheBirthYear(personalCode));
+        int birthMonth = Integer.parseInt(personalCode.substring(3, 5));
+        int birthDay = Integer.parseInt(personalCode.substring(5, 7));
+
+        LocalDate birthDate = LocalDate.of(birthYear, birthMonth, birthDay);
+        LocalDate currentDate = LocalDate.now();
+
+        Integer currentAge = Period.between(birthDate, currentDate).getYears();
+
+        if (currentAge < DecisionEngineConstants.AGE_OF_MAJORITY) {
+            return Boolean.FALSE;
+        }
+        if (birthYear == 1 || birthYear == 3 || birthYear == 5) {
+            return currentAge - DecisionEngineConstants.MAXIMUM_LOAN_PERIOD <
+                    DecisionEngineConstants.CURRENT_LIFE_EXPECTANCY_MALE;
+        } else {
+            return currentAge - DecisionEngineConstants.MAXIMUM_LOAN_PERIOD <
+                    DecisionEngineConstants.CURRENT_LIFE_EXPECTANCY_FEMALE;
+        }
+    }
+
+    private String calculateTheBirthYear(String personalCode) {
+        char firstHalf = personalCode.charAt(0);
+        String secondHalf = personalCode.substring(1, 3);
+        if (firstHalf == 1 || firstHalf == 2) {
+            return "18" + secondHalf;
+        } else if (firstHalf == 3 || firstHalf == 4) {
+            return "19" + secondHalf;
+        } else {
+            return "20" + secondHalf;
+        }
+    }
     /**
      * Calculates the largest valid loan for the current credit modifier and loan period.
      *
