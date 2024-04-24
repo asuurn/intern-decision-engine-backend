@@ -217,4 +217,33 @@ public class DecisionEngineControllerTest {
         assert response.getLoanPeriod() == null;
         assert response.getErrorMessage().equals("An unexpected error occurred");
     }
+
+    /**
+     * This test ensures that if a customer is not within the age requirements, the controller returns
+     * an HTTP Bad Request (400) response with the appropriate error message in the response body.
+     */
+    @Test
+    public void givenIdWithInvalidAge_whenRequestDecision_thenReturnsBadRequest()
+            throws Exception, InvalidLoanPeriodException, NoValidLoanException, InvalidPersonalCodeException,
+            InvalidLoanAmountException, NotInTheApprovedAgeRangeException {
+        when(decisionEngine.calculateApprovedLoan(anyString(), anyLong(), anyInt()))
+                .thenThrow(new NotInTheApprovedAgeRangeException("Age not in appropriate age range!"));
+
+        DecisionRequest request = new DecisionRequest("35006069515", 10L, 10);
+
+        MvcResult result = mockMvc.perform(post("/loan/decision")
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.loanAmount").isEmpty())
+                .andExpect(jsonPath("$.loanPeriod").isEmpty())
+                .andExpect(jsonPath("$.errorMessage").value("Age not in appropriate age range!"))
+                .andReturn();
+
+        DecisionResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), DecisionResponse.class);
+        assert response.getLoanAmount() == null;
+        assert response.getLoanPeriod() == null;
+        assert response.getErrorMessage().equals("Age not in appropriate age range!");
+    }
 }
