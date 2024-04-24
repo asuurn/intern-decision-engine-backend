@@ -15,7 +15,6 @@ import java.time.Period;
  */
 @Service
 public class DecisionEngine {
-
     // Used to check for the validity of the presented ID code.
     private final EstonianPersonalCodeValidator validator = new EstonianPersonalCodeValidator();
     private int creditModifier = 0;
@@ -64,7 +63,6 @@ public class DecisionEngine {
         } else {
             throw new NoValidLoanException("No valid loan found!");
         }
-        System.out.println(outputLoanAmount);
 
         return new Decision(outputLoanAmount, loanPeriod, null);
     }
@@ -73,7 +71,7 @@ public class DecisionEngine {
      * Check if the age of the customer is in the appropriate age range.
      * The age needs to be more than the legal age of majority and less than the current life expectancy according to
      * gender.
-     * As  mentioned in the assignment, for simplicity’s sake the personalCode is same for all the countries based on
+     * As mentioned in the assignment, for simplicity’s sake the personalCode is same for all the countries based on
      * Estonia's personal code.
      * @param personalCode ID code of the customer that made the request.
      * @return true if age is within the appropriate range, otherwise false.
