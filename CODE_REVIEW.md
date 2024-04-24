@@ -10,7 +10,8 @@
 - The tests are extensive and have nice line coverage.
 - The credit_modifier logic does not match with the example given in the task file, but as there were no further instructions in the file, I presume it's okay.
 - The credit score is not actually calculated and not compared to 1 as the task file suggests, but the logic is the similar, so I presume it's okay.
-
+- Could benefit from a logger for errors.
+- Each class has a single job. Service and controller are separated as they should be. 
 
 ## Biggest shortcoming
 
